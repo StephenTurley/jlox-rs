@@ -1,8 +1,9 @@
+use crate::scanner::Scanner;
 use std::io::Write;
 
 pub fn run_file(path: &str) {
     let source = std::fs::read_to_string(path).unwrap();
-    run(&source);
+    run(source);
 }
 
 pub fn run_prompt() {
@@ -16,8 +17,12 @@ pub fn run_prompt() {
         if result.is_err() {
             break;
         }
-        println!("{}", line);
+        run(line);
     }
 }
 
-fn run(_src: &str) {}
+fn run(src: String) {
+    let scanner = Scanner::new(src);
+    let tokens = scanner.scan_tokens();
+    tokens.iter().for_each(|tok| println!("{}", tok));
+}
