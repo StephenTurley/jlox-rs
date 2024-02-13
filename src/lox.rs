@@ -1,28 +1,50 @@
 use crate::scanner::Scanner;
+use anyhow::Result;
 use std::io::Write;
 
-pub fn run_file(path: &str) {
-    let source = std::fs::read_to_string(path).unwrap();
-    run(source);
+pub struct Lox {
+    had_error: bool,
 }
 
-pub fn run_prompt() {
-    loop {
-        print!("> ");
-        std::io::stdout().flush().unwrap();
-
-        let mut line = String::new();
-        let result = std::io::stdin().read_line(&mut line);
-
-        if result.is_err() {
-            break;
-        }
-        run(line);
+impl Lox {
+    pub fn new() -> Lox {
+        Lox { had_error: false }
     }
-}
+    pub fn run_file(&self, path: &str) -> Result<()> {
+        let source = std::fs::read(path)?;
+        self.run(source);
 
-fn run(src: String) {
-    let scanner = Scanner::new(src);
-    let tokens = scanner.scan_tokens();
-    tokens.iter().for_each(|tok| println!("{}", tok));
+        if self.had_error {
+            std::process::exit(65);
+        }
+        Ok(())
+    }
+
+    pub fn run_prompt(&mut self) -> Result<()> {
+        loop {
+            print!("> ");
+            std::io::stdout().flush()?;
+
+            let mut line = String::new();
+            std::io::stdin().read_line(&mut line)?;
+
+            self.run(line.into_bytes());
+            self.had_error = false;
+        }
+    }
+
+    fn run(&self, src: Vec<u8>) {
+        let mut scanner = Scanner::new(src);
+        let tokens = scanner.scan_tokens();
+        tokens.iter().for_each(|tok| println!("{}", tok));
+    }
+
+    pub fn error(&mut self, line: u64, msg: &str) {
+        self.report(line, "", msg);
+    }
+
+    fn report(&mut self, line: u64, loc: &str, msg: &str) {
+        eprintln!("[line {}] Error{}: {}", line, loc, msg);
+        self.had_error = true;
+    }
 }

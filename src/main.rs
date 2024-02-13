@@ -2,7 +2,10 @@ mod lox;
 mod scanner;
 mod token;
 
-fn main() {
+use crate::lox::Lox;
+use anyhow::Result;
+
+fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
 
     #[allow(clippy::comparison_chain)]
@@ -10,8 +13,8 @@ fn main() {
         println!("Usage jlox [script]");
         std::process::exit(64);
     } else if args.len() == 2 {
-        lox::run_file(&args[1]);
+        Lox::new().run_file(&args[1])
     } else {
-        lox::run_prompt();
+        Lox::new().run_prompt()
     }
 }
